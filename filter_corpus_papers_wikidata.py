@@ -6,10 +6,10 @@ all_papers_path = "/Users/amandeep/Github/covid-kg/covid/papers_qnodes_in_corpus
 o_dir = "/Users/amandeep/Github/covid-kg/covid/qnode_details"
 
 all_papers_f = open(all_papers_path)
-all_papers = []
+all_papers = {}
 for line in all_papers_f:
     qnode = line.replace('\n', '')
-    all_papers.append(qnode)
+    all_papers[qnode] = 1
 
 f = gzip.open(edges_file)
 o_file = open('{}/papers_wikidata.tsv'.format(o_dir), 'w')

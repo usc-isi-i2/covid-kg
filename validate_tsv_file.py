@@ -20,5 +20,5 @@ def validate_file(file_name, num_columns, sep='\t'):
 
 
 # validate_file('/Users/amandeep/Github/covid-kg/covid/covid_kgtk_statements_sorted_by_node1_wlabel.tsv', 4)
-# validate_file('/Users/amandeep/Github/covid-kg/covid/covid_kgtk_statements_sorted_by_property_wlabel.tsv', 6)
-validate_file('/Users/amandeep/Documents/covid_data/labels_sorted_temp.tsv.gz', 2)
+validate_file('/Users/amandeep/Github/covid-kg/covid/covid_kgtk_statements_with_labels.tsv', 7)
+# validate_file('/Users/amandeep/Documents/covid_data/labels_sorted_temp.tsv.gz', 2)

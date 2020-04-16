@@ -152,7 +152,7 @@ def create_kgtk():
         file_name = paper.split('/')[-1]
         pj = json.load(open(paper))
         pmcid = None
-        full_pmc_id =pj.get('pmcid', None)
+        full_pmc_id = pj.get('pmcid', None)
         if full_pmc_id and 'PMC' in full_pmc_id:
             pmcid = full_pmc_id[3:]
 
@@ -176,27 +176,28 @@ def create_kgtk():
                 t_qnode = '{}-text-{}'.format(qnode, i)
                 offset = passage.get('offset')
                 label = passage.get('text', '')
-                start = 0
-                section = passage['infons']['section']
-                text_frag = TextFragment(label, t_qnode, offset, section)
-                article.add_text_frag(text_frag)
                 annotations = passage.get('annotations', [])
-                for annotation in annotations:
-                    # identifier, type, offset, length, qnode, text_fragment
-                    infons = annotation['infons']
-                    e_identifier = infons['identifier']
-                    e_type = infons['type'].lower()
-                    e_offset = annotation['locations'][0]['offset']
-                    e_length = annotation['locations'][0]['length']
-                    stated_as = annotation['text']
-                    if e_identifier:
-                        if 'MESH' in e_identifier:
-                            e_identifier = e_identifier.split(':')[1]
-                        e_qnode = entity_dict.get('{}@{}'.format(e_type, e_identifier), {'qnode': None})['qnode']
-                        if e_qnode:
-                            entity = Entity(e_offset, e_length, 'http://blender.cs.illinois.edu/', stated_as, text_frag,
-                                            e_type, e_qnode)
-                            article.add_entity(entity)
+                section = passage['infons']['section']
+                if len(annotations) > 0:
+                    text_frag = TextFragment(label, t_qnode, offset, section)
+                    article.add_text_frag(text_frag)
+
+                    for annotation in annotations:
+                        # identifier, type, offset, length, qnode, text_fragment
+                        infons = annotation['infons']
+                        e_identifier = infons['identifier']
+                        e_type = infons['type'].lower()
+                        e_offset = annotation['locations'][0]['offset']
+                        e_length = annotation['locations'][0]['length']
+                        stated_as = annotation['text']
+                        if e_identifier:
+                            if 'MESH' in e_identifier:
+                                e_identifier = e_identifier.split(':')[1]
+                            e_qnode = entity_dict.get('{}@{}'.format(e_type, e_identifier), {'qnode': None})['qnode']
+                            if e_qnode:
+                                entity = Entity(e_offset, e_length, 'http://blender.cs.illinois.edu/', stated_as, text_frag,
+                                                e_type, e_qnode)
+                                article.add_entity(entity)
 
             articles.append(article)
     return articles, scholarly_articles
