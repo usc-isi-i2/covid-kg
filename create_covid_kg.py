@@ -73,6 +73,59 @@ class Article(object):
         return s
 
 
+class ScholarlyArticle(object):
+    def __init__(self, title, authors, publication_date, pmc_id, pm_id, file_name):
+        self.P31 = 'Q13442814'  # instance of
+        self.P1476 = title  # title
+        self.label = title
+        self.P2093 = authors  # author name string
+        self.P577 = publication_date  # publication date
+        self.P932 = pmc_id
+        self.P698 = pm_id
+        self.file_name = file_name
+        self.qnode = self.create_qnode()
+
+    def create_qnode(self):
+        qnode = None
+        if self.P932:
+            qnode = 'Q00007770{}'.format(self.P932)
+        elif self.P698:
+            qnode = 'Q00007770{}'.format(self.P698)
+        return qnode
+
+    def serialize(self):
+        _d = {'P31': self.P31, 'label': self.label, 'qnode': self.qnode, 'file_name': self.file_name}
+        if self.P577:
+            _d['P577'] = self.P577
+        if self.P1476:
+            _d['P1476'] = self.P1476
+
+        if self.P2093:
+            _d['P2093'] = self.P2093
+        if self.P932:
+            _d['P932'] = 'https://www.ncbi.nlm.nih.gov/pmc/articles/{}'.format(self.P932)
+        if self.P698:
+            _d['P698'] = 'https://pubmed.ncbi.nlm.nih.gov/{}'.format(self.P698)
+        return _d
+
+
+def create_scholarly_article(paper_json, pmid, pmc_id, file_name):
+    authors = paper_json.get('authors')
+    published_date = paper_json.get('year')
+    passages = paper_json.get('passages', [])
+    title = ""
+    if not isinstance(passages, list):
+        passages = [passages]
+    for passage in passages:
+        infons = passage.get('infons', None)
+        if infons:
+            if infons['section'].lower() == 'title':
+                title = passage['text']
+                break
+
+    return ScholarlyArticle(title, authors, published_date, pmc_id, pmid, file_name)
+
+
 papers = glob('{}/*json'.format('/Users/amandeep/Documents/pmid_abs')) + glob(
     '{}/*json'.format('/Users/amandeep/Documents/pmcid'))
 
@@ -93,13 +146,15 @@ e_type_to_property_map = {
 
 def create_kgtk():
     articles = []
+    scholarly_articles = []
     for paper in papers:
         print(paper)
         file_name = paper.split('/')[-1]
         pj = json.load(open(paper))
-        pmcid = pj.get('pmcid', None)
-        if pmcid and 'PMC' in pmcid:
-            pmcid = pmcid[3:]
+        pmcid = None
+        full_pmc_id =pj.get('pmcid', None)
+        if full_pmc_id and 'PMC' in full_pmc_id:
+            pmcid = full_pmc_id[3:]
 
         pmid = pj.get('pmid', None)
         if pmid:
@@ -108,6 +163,10 @@ def create_kgtk():
         qnode = pmc_dict.get(pmcid, None)
         if not qnode:
             qnode = pm_dict.get(pmid, None)
+        if not qnode:
+            sa = create_scholarly_article(pj, pmid, full_pmc_id, file_name)
+            qnode = sa.qnode
+            scholarly_articles.append(sa)
         if qnode:
             article = Article(qnode, file_name)
             passages = pj.get('passages', [])
@@ -140,10 +199,10 @@ def create_kgtk():
                             article.add_entity(entity)
 
             articles.append(article)
-    return articles
+    return articles, scholarly_articles
 
 
-def create_kgtk_format(articles: List[Article]):
+def create_kgtk_format(articles: List[Article], scholarly_articles: List[ScholarlyArticle]):
     statements = list()
     qualifiers = list()
     for article in articles:
@@ -180,10 +239,30 @@ def create_kgtk_format(articles: List[Article]):
                                        'id': '{}-{}'.format(t_edge_id_prop, c)})
                     c += 1
 
+    for scholarly_article in scholarly_articles:
+        sa = scholarly_article.serialize()
+        qnode = sa['qnode']
+        file_name = sa['file_name']
+        i = 0
+        for k in sa:
+            if k not in ('qnode', 'file_name'):
+
+                if k == 'P2093':
+                    authors = sa[k]
+                    for author in authors:
+                        edge_id = '{}-{}-{}-{}'.format(qnode, k, file_name, i)
+                        statements.append({'node1': qnode, 'property': k, 'node2': author, 'id': edge_id})
+                        i += 1
+                else:
+                    edge_id = '{}-{}-{}-{}'.format(qnode, k, file_name, i)
+                    statements.append({'node1': qnode, 'property': k, 'node2': sa[k], 'id': edge_id})
+                    i += 1
+
     return pd.DataFrame(statements), pd.DataFrame(qualifiers)
 
 
-statements, qualifiers = create_kgtk_format(create_kgtk())
+articles, scholarly_articles = create_kgtk()
+statements, qualifiers = create_kgtk_format(articles, scholarly_articles)
 
 statements.to_csv('covid/covid_kgtk_statements.tsv', sep='\t', index=False)
 qualifiers.to_csv('covid/covid_kgtk_qualifiers.tsv', sep='\t', index=False)
