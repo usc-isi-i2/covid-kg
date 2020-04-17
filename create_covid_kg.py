@@ -3,129 +3,8 @@ import gzip
 import pandas as pd
 from typing import List
 from glob import glob
-from create_annotations_kg import create_chemical_kg, create_disease_kg, create_gene_kg
-
-
-class TextFragment(object):
-    def __init__(self, label, qnode, offset, section):
-        self.label = label
-        self.qnode = qnode
-        self.offset = offset
-        self.section = section
-
-    def serialize(self):
-        return {
-            'label': self.label,
-            'qnode': self.qnode,
-            'P4153': self.offset,
-            'P958': self.section,
-        }
-
-
-class Entity(object):
-    def __init__(self, offset, length, attributed_to, stated_as, text_fragment: TextFragment, type, qnode):
-        self.offset = offset
-        self.length = length
-        self.attributed_to = attributed_to
-        self.stated_as = stated_as
-        self.text_fragment = text_fragment
-        self.type = type
-        self.qnode = qnode
-
-    def serialize(self):
-        return {
-            'P4153': self.offset,
-            'P2043': self.length,
-            'P1932': self.stated_as,
-            'P2020008': self.attributed_to,
-            'P2020001': self.text_fragment.qnode,
-            'type': self.type,
-            'qnode': self.qnode
-        }
-
-
-class Article(object):
-    def __init__(self, qnode, file_name):
-        self.qnode = qnode
-        self.text_frags = []
-        self.entities = []
-        self.file_name = file_name
-
-    def add_text_frag(self, text_frag: TextFragment):
-        self.text_frags.append(text_frag)
-
-    def add_entity(self, entity: Entity):
-        self.entities.append(entity)
-
-    def serialize(self):
-        tfs = []
-        ens = []
-        s = {}
-        for tf in self.text_frags:
-            tfs.append(tf.serialize())
-
-        for entity in self.entities:
-            ens.append(entity.serialize())
-
-        s['text_fragments'] = tfs
-        s['entities'] = ens
-        s['qnode'] = self.qnode
-        s['file_name'] = self.file_name
-        return s
-
-
-class ScholarlyArticle(object):
-    def __init__(self, title, authors, publication_date, pmc_id, pm_id, file_name):
-        self.P31 = 'Q13442814'  # instance of
-        self.P1476 = title  # title
-        self.label = title
-        self.P2093 = authors  # author name string
-        self.P577 = publication_date  # publication date
-        self.P932 = pmc_id
-        self.P698 = pm_id
-        self.file_name = file_name
-        self.qnode = self.create_qnode()
-
-    def create_qnode(self):
-        qnode = None
-        if self.P932:
-            qnode = 'Q00007770{}'.format(self.P932)
-        elif self.P698:
-            qnode = 'Q00007770{}'.format(self.P698)
-        return qnode
-
-    def serialize(self):
-        _d = {'P31': self.P31, 'label': self.label, 'qnode': self.qnode, 'file_name': self.file_name}
-        if self.P577:
-            _d['P577'] = self.P577
-        if self.P1476:
-            _d['P1476'] = self.P1476
-
-        if self.P2093:
-            _d['P2093'] = self.P2093
-        if self.P932:
-            _d['P932'] = self.P932
-        if self.P698:
-            _d['P698'] = self.P698
-        return _d
-
-
-def create_scholarly_article(paper_json, pmid, pmc_id, file_name):
-    authors = paper_json.get('authors')
-    published_date = paper_json.get('year')
-    passages = paper_json.get('passages', [])
-    title = ""
-    if not isinstance(passages, list):
-        passages = [passages]
-    for passage in passages:
-        infons = passage.get('infons', None)
-        if infons:
-            if infons['section'].lower() == 'title':
-                title = passage['text']
-                break
-
-    return ScholarlyArticle(title, authors, published_date, pmc_id, pmid, file_name)
-
+from covid_kg_classes import create_chemical_kg, create_disease_kg, create_gene_kg, create_scholarly_article
+from covid_kg_classes import TextFragment, Entity, Article, ScholarlyArticle
 
 papers = glob('{}/*json'.format('/Users/amandeep/Documents/pmid_abs')) + glob(
     '{}/*json'.format('/Users/amandeep/Documents/pmcid'))
@@ -266,7 +145,10 @@ def create_kgtk_format(articles: List[Article], scholarly_articles: List[Scholar
                     authors = sa[k]
                     for author in authors:
                         edge_id = '{}-{}-{}-{}'.format(qnode, k, file_name, i)
-                        statements.append({'node1': qnode, 'property': k, 'node2': author, 'id': edge_id})
+                        statements.append({'node1': qnode, 'property': k, 'node2': author['name'], 'id': edge_id})
+                        # series ordinal for authors
+                        statements.append({'node1': edge_id, 'property': 'P1545', 'node2': author['ordinal'],
+                                           'id': '{}-1'.format(edge_id)})
                         i += 1
                 else:
                     edge_id = '{}-{}-{}-{}'.format(qnode, k, file_name, i)
