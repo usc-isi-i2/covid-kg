@@ -3,6 +3,7 @@ import gzip
 import pandas as pd
 from typing import List
 from glob import glob
+from create_annotations_kg import create_chemical_kg, create_disease_kg, create_gene_kg
 
 
 class TextFragment(object):
@@ -103,9 +104,9 @@ class ScholarlyArticle(object):
         if self.P2093:
             _d['P2093'] = self.P2093
         if self.P932:
-            _d['P932'] = 'https://www.ncbi.nlm.nih.gov/pmc/articles/{}'.format(self.P932)
+            _d['P932'] = self.P932
         if self.P698:
-            _d['P698'] = 'https://pubmed.ncbi.nlm.nih.gov/{}'.format(self.P698)
+            _d['P698'] = self.P698
         return _d
 
 
@@ -147,6 +148,7 @@ e_type_to_property_map = {
 def create_kgtk():
     articles = []
     scholarly_articles = []
+    annotation_entities = []
     for paper in papers:
         print(paper)
         file_name = paper.split('/')[-1]
@@ -195,15 +197,27 @@ def create_kgtk():
                                 e_identifier = e_identifier.split(':')[1]
                             e_qnode = entity_dict.get('{}@{}'.format(e_type, e_identifier), {'qnode': None})['qnode']
                             if e_qnode:
-                                entity = Entity(e_offset, e_length, 'http://blender.cs.illinois.edu/', stated_as, text_frag,
+                                entity = Entity(e_offset, e_length, 'http://blender.cs.illinois.edu/', stated_as,
+                                                text_frag,
                                                 e_type, e_qnode)
                                 article.add_entity(entity)
+                            else:
+                                obj = None
+                                if e_type == 'disease':
+                                    obj = create_disease_kg(e_identifier)
+                                elif e_type == 'chemical':
+                                    obj = create_chemical_kg(e_identifier)
+                                elif e_type == 'gene':
+                                    obj = create_gene_kg(e_identifier)
+
+                                if obj:
+                                    annotation_entities.append(obj)
 
             articles.append(article)
-    return articles, scholarly_articles
+    return articles, scholarly_articles, annotation_entities
 
 
-def create_kgtk_format(articles: List[Article], scholarly_articles: List[ScholarlyArticle]):
+def create_kgtk_format(articles: List[Article], scholarly_articles: List[ScholarlyArticle], annotation_entities):
     statements = list()
     qualifiers = list()
     for article in articles:
@@ -259,11 +273,28 @@ def create_kgtk_format(articles: List[Article], scholarly_articles: List[Scholar
                     statements.append({'node1': qnode, 'property': k, 'node2': sa[k], 'id': edge_id})
                     i += 1
 
+    for obj in annotation_entities:
+        o = obj.serialize()
+        qnode = o['qnode']
+        i = 0
+        for k in o:
+            if k not in ('qnode'):
+                if k == 'aliases':
+                    aliases = o[k]
+                    for alias in aliases:
+                        edge_id = '{}-{}-{}'.format(qnode, k, i)
+                        statements.append({'node1': qnode, 'property': k, 'node2': alias, 'id': edge_id})
+                        i += 1
+                else:
+                    edge_id = '{}-{}-{}'.format(qnode, k, i)
+                    statements.append({'node1': qnode, 'property': k, 'node2': o[k], 'id': edge_id})
+                    i += 1
+
     return pd.DataFrame(statements), pd.DataFrame(qualifiers)
 
 
-articles, scholarly_articles = create_kgtk()
-statements, qualifiers = create_kgtk_format(articles, scholarly_articles)
+articles, scholarly_articles, annotation_entities = create_kgtk()
+statements, qualifiers = create_kgtk_format(articles, scholarly_articles, annotation_entities)
 
 statements.to_csv('covid/covid_kgtk_statements.tsv', sep='\t', index=False)
 qualifiers.to_csv('covid/covid_kgtk_qualifiers.tsv', sep='\t', index=False)

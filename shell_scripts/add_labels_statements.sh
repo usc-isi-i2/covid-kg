@@ -40,3 +40,6 @@ rm covid_kgtk_statements_sorted_by_node2.tsv
 rm covid_kgtk_statements_sorted_by_node2_wlabel.tsv
 rm covid_kgtk_statements_sorted_by_property_temp.tsv
 rm covid_kgtk_statements_sorted_by_property.tsv
+rm covid_kgtk_statements_with_labels_order.tsv
+
+gzip covid_kgtk_statements_with_labels.tsv
