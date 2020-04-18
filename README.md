@@ -15,8 +15,8 @@ pip install -r requirements.txt
 
 ```
 
-- Install (`kgtk`)[https://github.com/usc-isi-i2/kgtk]
-- Install (`mlr`)[https://johnkerl.org/miller/doc/build.html]
+- Install [`kgtk`](https://github.com/usc-isi-i2/kgtk)
+- Install [`mlr`](https://johnkerl.org/miller/doc/build.html)
 
 ## Setup `covid.env`
 
