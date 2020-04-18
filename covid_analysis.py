@@ -179,14 +179,15 @@ def pubmed_analysis():
 
 
 def ctd_diseases():
-    f_path = '/Volumes/GoogleDrive/Shared drives/KGTK/datasets/covid/CTD_diseases.tsv'
-    f = open(f_path)
+    f_path = '/Volumes/GoogleDrive/Shared drives/KGTK/datasets/covid/CTD_diseases.tsv.gz'
+    f = gzip.open(f_path)
     i = 0
     disease_dict = {}
     for line in f:
         if i < 29:
             i += 1
             continue
+        line = line.decode('utf-8').replace('\n', '')
         line = line.split('\t')
         if len(line) > 1:
             disease_id = line[1]
@@ -237,8 +238,8 @@ def ctd_chemicals():
     open('{}/ctd_chemical_dict.json'.format(os.getenv('covid_kg_path')), 'w').write(json.dumps(chemical_dict))
 
 
-link_entities_in_covid_data(os.getenv('covid_kg_path'))
-create_pubmedid_to_qnode(os.getenv('covid_kg_path'))
+link_entities_in_covid_data(os.getenv('input_path'))
+create_pubmedid_to_qnode(os.getenv('input_path'))
 pubmed_analysis()
 ctd_genes()
 ctd_diseases()
