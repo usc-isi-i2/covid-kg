@@ -1,18 +1,22 @@
+import os
 import json
 import gzip
 import pandas as pd
-from typing import List
 from glob import glob
-from covid_kg_classes import create_chemical_kg, create_disease_kg, create_gene_kg, create_scholarly_article
+from typing import List
+from dotenv import load_dotenv
 from covid_kg_classes import TextFragment, Entity, Article, ScholarlyArticle
+from covid_kg_classes import create_chemical_kg, create_disease_kg, create_gene_kg, create_scholarly_article
 
-papers = glob('{}/*json'.format('/Users/amandeep/Documents/pmid_abs')) + glob(
-    '{}/*json'.format('/Users/amandeep/Documents/pmcid'))
+load_dotenv('shell_scripts/covid.env')
 
-pmc_dict = json.load(gzip.open('covid/pmcid_to_qnode.json.gz'))
-pm_dict = json.load(gzip.open('covid/pubmed_to_qnode.json.gz'))
+papers = glob('{}/*json'.format(os.getenv('pm_path'))) + glob(
+    '{}/*json'.format(os.getenv('pmc_path')))
 
-entity_dict = json.load(open('covid/entities_to_qnode.json'))
+pmc_dict = json.load(gzip.open('{}/pmcid_to_qnode.json.gz'.format(os.getenv('covid_kg_path'))))
+pm_dict = json.load(gzip.open('{}/pubmed_to_qnode.json.gz'.format(os.getenv('covid_kg_path'))))
+
+entity_dict = json.load(open('{}/entities_to_qnode.json'.format(os.getenv('covid_kg_path'))))
 
 e_type_to_property_map = {
     'gene': 'P2020002',
@@ -178,5 +182,5 @@ def create_kgtk_format(articles: List[Article], scholarly_articles: List[Scholar
 articles, scholarly_articles, annotation_entities = create_kgtk()
 statements, qualifiers = create_kgtk_format(articles, scholarly_articles, annotation_entities)
 
-statements.to_csv('covid/covid_kgtk_statements.tsv', sep='\t', index=False)
-qualifiers.to_csv('covid/covid_kgtk_qualifiers.tsv', sep='\t', index=False)
+statements.to_csv('{}/covid_kgtk_statements.tsv'.format(os.getenv('covid_kg_path')), sep='\t', index=False)
+qualifiers.to_csv('{}/covid_kgtk_qualifiers.tsv'.format(os.getenv('covid_kg_path')), sep='\t', index=False)

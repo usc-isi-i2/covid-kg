@@ -1,25 +1,17 @@
+import os
 import json
 import gzip
 from glob import glob
 from tqdm import tqdm
+from dotenv import load_dotenv
 
+load_dotenv('shell_scripts/covid.env')
 f = json.load(open('/Volumes/GoogleDrive/Shared drives/KGTK/datasets/covid/KG-Heng/Analysis/type_counts.json'))
 
 d = set()
 
 
 def create_properties_dict(prop_path):
-    """
-    # TODO These commands are used to filter rows with specified property from the KGTK Wikidata file
-    kgtk filter -p ";P685;" --datatype tsv edges_scholarly_articles_in_subject.tsv > property_p685.tsv
-    kgtk filter -p ";P486;" --datatype tsv edges_scholarly_articles_in_subject.tsv > property_p486.tsv
-    kgtk filter -p ";P351;" --datatype tsv edges_scholarly_articles_in_subject.tsv > property_p351.tsv
-    kgtk filter -p ";P5055;" --datatype tsv edges_scholarly_articles_in_subject.tsv > property_p5055.tsv
-
-
-    :param prop_path:
-    :return:
-    """
     f = open(prop_path)
     _ = {}
     for line in f:
@@ -102,20 +94,15 @@ def link_entities_in_covid_data(f_path):
         print(k, len(not_found[k]))
     for k in found:
         print(k, len(found[k]))
-    open('covid/entities_to_qnode.json', 'w').write(json.dumps(result))
-    open('covid/entities_not_found.json', 'w').write(json.dumps(no_go))
+    open('{}/entities_to_qnode.json'.format(os.getenv('covid_kg_path')), 'w').write(json.dumps(result))
+    open('{}/entities_not_found.json'.format(os.getenv('covid_kg_path')), 'w').write(json.dumps(no_go))
 
     for k in type_to_qnode_dict:
-        open('covid/{}_qnodes.txt'.format(k), 'w').write('\n'.join(list(type_to_qnode_dict[k])))
+        open('{}/{}_qnodes.txt'.format(os.getenv('covid_kg_path'), k), 'w').write(
+            '\n'.join(list(type_to_qnode_dict[k])))
 
 
 def create_pubmedid_to_qnode(f_path):
-    """
-    # TODO This command filters rows mentioning PMCIds and pub med ids.
-    kgtk filter -p ";P698,P932;" --datatype tsv edges_scholarly_articles_in_subject.tsv > property_pubmeds.tsv
-    :return:
-    """
-
     f = open('{}/property_pubmeds.tsv'.format(f_path))
     pubmed_dict = {}
     pmcid_dict = {}
@@ -129,8 +116,10 @@ def create_pubmedid_to_qnode(f_path):
         if property == 'P932':
             pmcid_dict[pid] = qnode
 
-    gzip.open('covid/pubmed_to_qnode.json.gz', 'w').write(bytes(json.dumps(pubmed_dict), encoding='utf-8'))
-    gzip.open('covid/pmcid_to_qnode.json.gz', 'w').write(bytes(json.dumps(pmcid_dict), encoding='utf-8'))
+    gzip.open('{}/pubmed_to_qnode.json.gz'.format(os.getenv('covid_kg_path')), 'w').write(
+        bytes(json.dumps(pubmed_dict), encoding='utf-8'))
+    gzip.open('{}/pmcid_to_qnode.json.gz'.format(os.getenv('covid_kg_path')), 'w').write(
+        bytes(json.dumps(pmcid_dict), encoding='utf-8'))
 
 
 def pubmed_analysis():
@@ -138,11 +127,11 @@ def pubmed_analysis():
     find out which papers in the corpus are not in Wikidata
     :return:
     """
-    pmcid_path = '/Users/amandeep/Documents/pmcid'
-    pubmed_path = '/Users/amandeep/Documents/pmid_abs'
+    pmcid_path = os.getenv('pmc_path')
+    pubmed_path = os.getenv('pm_path')
 
-    pmc_dict = json.load(gzip.open('covid/pmcid_to_qnode.json.gz'))
-    pm_dict = json.load(gzip.open('covid/pubmed_to_qnode.json.gz'))
+    pmc_dict = json.load(gzip.open('{}/pmcid_to_qnode.json.gz'.format(os.getenv('covid_kg_path'))))
+    pm_dict = json.load(gzip.open('{}/pubmed_to_qnode.json.gz'.format(os.getenv('covid_kg_path'))))
 
     both = []
     pmc_only = []
@@ -182,11 +171,11 @@ def pubmed_analysis():
     print('pmc only: {}'.format(len(pmc_only)))
     print('pm only: {}'.format(len(pm_only)))
     print('not found: {}'.format(len(not_found)))
-    open('covid/papers_in_wikidata_with_both_ids.txt', 'w').write('\n'.join(both))
-    open('covid/papers_in_wikidata_with_pmc_ids.txt', 'w').write('\n'.join(pmc_only))
-    open('covid/papers_in_wikidata_with_pm_ids.txt', 'w').write('\n'.join(pm_only))
-    open('covid/papers_not_found_in_wikidata.txt', 'w').write('\n'.join(not_found))
-    open('covid/papers_qnodes_in_corpus.txt', 'w').write('\n'.join(list(qnodes)))
+    open('{}/papers_in_wikidata_with_both_ids.txt'.format(os.getenv('covid_kg_path')), 'w').write('\n'.join(both))
+    open('{}/papers_in_wikidata_with_pmc_ids.txt'.format(os.getenv('covid_kg_path')), 'w').write('\n'.join(pmc_only))
+    open('{}/papers_in_wikidata_with_pm_ids.txt'.format(os.getenv('covid_kg_path')), 'w').write('\n'.join(pm_only))
+    open('{}/papers_not_found_in_wikidata.txt'.format(os.getenv('covid_kg_path')), 'w').write('\n'.join(not_found))
+    open('{}/papers_qnodes_in_corpus.txt'.format(os.getenv('covid_kg_path')), 'w').write('\n'.join(list(qnodes)))
 
 
 def ctd_diseases():
@@ -204,7 +193,7 @@ def ctd_diseases():
 
             disease_dict[disease_id] = line
 
-    open('covid/ctd_disease_dict.json', 'w').write(json.dumps(disease_dict))
+    open('{}/ctd_disease_dict.json'.format(os.getenv('covid_kg_path')), 'w').write(json.dumps(disease_dict))
 
 
 def ctd_genes():
@@ -224,7 +213,7 @@ def ctd_genes():
 
             gene_dict[gene_id] = line
 
-    open('covid/ctd_gene_dict.json', 'w').write(json.dumps(gene_dict))
+    open('{}/ctd_gene_dict.json'.format(os.getenv('covid_kg_path')), 'w').write(json.dumps(gene_dict))
 
 
 def ctd_chemicals():
@@ -245,14 +234,12 @@ def ctd_chemicals():
                 chemical_id = chemical_id[5:]
 
             chemical_dict[chemical_id] = line
-    open('covid/ctd_chemical_dict.json', 'w').write(json.dumps(chemical_dict))
+    open('{}/ctd_chemical_dict.json'.format(os.getenv('covid_kg_path')), 'w').write(json.dumps(chemical_dict))
 
 
-def create_qnodes_list_ron():
-    d = json.load(gzip.open('covid/pmcid_to_qnode.json.gz'))
-    print(len(d.values()))
-    # print(d.values())
-
-
-# link_entities_in_covid_data('/Users/amandeep/Documents/covid_data')
-# create_pubmedid_to_qnode('/Users/amandeep/Documents/covid_data')
+link_entities_in_covid_data(os.getenv('covid_kg_path'))
+create_pubmedid_to_qnode(os.getenv('covid_kg_path'))
+pubmed_analysis()
+ctd_genes()
+ctd_diseases()
+ctd_diseases()

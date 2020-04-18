@@ -1,6 +1,9 @@
+import os
 import json
 from typing import List
+from dotenv import load_dotenv
 
+load_dotenv('shell_scripts/covid.env')
 ctd_gene_header_dict = {
     0: 'GeneSymbol',
     1: 'label',
@@ -12,9 +15,9 @@ ctd_gene_header_dict = {
     7: 'P352'  # UniProtIDs
 }
 
-ctd_gene_dict = json.load(open('/Users/amandeep/Github/covid-kg/covid/ctd_gene_dict.json'))
-ctd_disease_dict = json.load(open('/Users/amandeep/Github/covid-kg/covid/ctd_disease_dict.json'))
-ctd_chemical_dict = json.load(open('/Users/amandeep/Github/covid-kg/covid/ctd_chemical_dict.json'))
+ctd_gene_dict = json.load(open('{}/ctd_gene_dict.json'.format(os.getenv('covid_kg_path'))))
+ctd_disease_dict = json.load(open('{}/ctd_disease_dict.json'.format(os.getenv('covid_kg_path'))))
+ctd_chemical_dict = json.load(open('{}/ctd_chemical_dict.json'.format(os.getenv('covid_kg_path'))))
 
 
 class Gene(object):
