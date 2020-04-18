@@ -47,6 +47,10 @@ python covid_analysis.py
 
 python create_covid_kg.py
 
+cd shell_scripts
+./add_labels_statements.sh
+
+cd ..
 python filter_corpus_papers_annotations_wikidata.py
 ```
 
