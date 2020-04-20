@@ -12,17 +12,32 @@ d = set()
 
 
 def create_properties_dict(prop_path):
+    p685_dict = {}
+    p351_dict = {}
+    p486_dict = {}
+    p5055_dict = {}
     f = open(prop_path)
-    _ = {}
     for line in f:
         vals = line.split('\t')
 
         qnode = vals[1]
         val = vals[3].replace("\"", "").replace('\n', '')
-        if qnode.startswith('Q'):
-            _[val] = {'qnode': qnode, 'property': vals[2], 'value': val}
+        property = vals[2]
 
-    return _
+        if qnode.startswith('Q'):
+            if property == 'P685':
+                p685_dict[val] = {'qnode': qnode, 'property': property, 'value': val}
+
+            elif property == 'P351':
+                p351_dict[val] = {'qnode': qnode, 'property': property, 'value': val}
+
+            elif property == 'P486':
+                p486_dict[val] = {'qnode': qnode, 'property': property, 'value': val}
+
+            elif property == 'P5055':
+                p5055_dict[val] = {'qnode': qnode, 'property': property, 'value': val}
+
+    return p685_dict, p351_dict, p486_dict, p5055_dict
 
 
 def link_entities_in_covid_data(f_path):
@@ -36,11 +51,7 @@ def link_entities_in_covid_data(f_path):
         'genus': 'P5055'
     }
 
-    p685_dict = create_properties_dict('{}/property_p685.tsv'.format(f_path))
-    p351_dict = create_properties_dict('{}/property_p351.tsv'.format(f_path))
-    p486_dict = create_properties_dict('{}/property_p486.tsv'.format(f_path))
-    p5055_dict = create_properties_dict('{}/property_p5055.tsv'.format(f_path))
-    print(p685_dict)
+    p685_dict, p351_dict, p486_dict, p5055_dict = create_properties_dict('{}/pubmed_properties.tsv'.format(f_path))
 
     type_dict = {
         'P685': p685_dict,
@@ -68,7 +79,6 @@ def link_entities_in_covid_data(f_path):
             identifier = [identifiers]
         for i in identifier:
             if property in type_dict:
-                # print(i, property)
                 if i in type_dict[property]:
                     if type not in type_to_qnode_dict:
                         type_to_qnode_dict[type] = set()
@@ -89,11 +99,6 @@ def link_entities_in_covid_data(f_path):
                     not_found[type] = set()
                 not_found[type].add(i)
 
-    print(len(no_go))
-    for k in not_found:
-        print(k, len(not_found[k]))
-    for k in found:
-        print(k, len(found[k]))
     open('{}/entities_to_qnode.json'.format(os.getenv('covid_kg_path')), 'w').write(json.dumps(result))
     open('{}/entities_not_found.json'.format(os.getenv('covid_kg_path')), 'w').write(json.dumps(no_go))
 
@@ -103,7 +108,7 @@ def link_entities_in_covid_data(f_path):
 
 
 def create_pubmedid_to_qnode(f_path):
-    f = open('{}/property_pubmeds.tsv'.format(f_path))
+    f = open('{}/pubmed_properties.tsv'.format(f_path))
     pubmed_dict = {}
     pmcid_dict = {}
     for line in f:
@@ -238,9 +243,20 @@ def ctd_chemicals():
     open('{}/ctd_chemical_dict.json'.format(os.getenv('covid_kg_path')), 'w').write(json.dumps(chemical_dict))
 
 
+print('Entity resolving the annotations...')
 link_entities_in_covid_data(os.getenv('input_path'))
+print('Done!')
+
+print('Creating pubmed ids to qnodes...')
 create_pubmedid_to_qnode(os.getenv('input_path'))
+print('Done!')
+
+print('Creating helper files...')
 pubmed_analysis()
+print('Done!')
+
+print('pre processing CTD data...')
 ctd_genes()
 ctd_diseases()
-ctd_diseases()
+ctd_chemicals()
+print('Done!')
