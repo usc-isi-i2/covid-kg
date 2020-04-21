@@ -103,6 +103,8 @@ def create_kgtk():
 def create_kgtk_format(articles: List[Article], scholarly_articles: List[ScholarlyArticle], annotation_entities):
     statements = list()
     qualifiers = list()
+    paper_wikidata = list()
+    annotations_wikidata = list()
     for article in articles:
         a_s = article.serialize()
         qnode = a_s['qnode']
@@ -149,14 +151,14 @@ def create_kgtk_format(articles: List[Article], scholarly_articles: List[Scholar
                     authors = sa[k]
                     for author in authors:
                         edge_id = '{}-{}-{}-{}'.format(qnode, k, file_name, i)
-                        statements.append({'node1': qnode, 'property': k, 'node2': author['name'], 'id': edge_id})
+                        paper_wikidata.append({'node1': qnode, 'property': k, 'node2': author['name'], 'id': edge_id})
                         # series ordinal for authors
-                        statements.append({'node1': edge_id, 'property': 'P1545', 'node2': author['ordinal'],
-                                           'id': '{}-1'.format(edge_id)})
+                        paper_wikidata.append({'node1': edge_id, 'property': 'P1545', 'node2': author['ordinal'],
+                                               'id': '{}-1'.format(edge_id)})
                         i += 1
                 else:
                     edge_id = '{}-{}-{}-{}'.format(qnode, k, file_name, i)
-                    statements.append({'node1': qnode, 'property': k, 'node2': sa[k], 'id': edge_id})
+                    paper_wikidata.append({'node1': qnode, 'property': k, 'node2': sa[k], 'id': edge_id})
                     i += 1
 
     for obj in annotation_entities:
@@ -169,18 +171,25 @@ def create_kgtk_format(articles: List[Article], scholarly_articles: List[Scholar
                     aliases = o[k]
                     for alias in aliases:
                         edge_id = '{}-{}-{}'.format(qnode, k, i)
-                        statements.append({'node1': qnode, 'property': k, 'node2': alias, 'id': edge_id})
+                        annotations_wikidata.append({'node1': qnode, 'property': k, 'node2': alias, 'id': edge_id})
                         i += 1
                 else:
                     edge_id = '{}-{}-{}'.format(qnode, k, i)
-                    statements.append({'node1': qnode, 'property': k, 'node2': o[k], 'id': edge_id})
+                    annotations_wikidata.append({'node1': qnode, 'property': k, 'node2': o[k], 'id': edge_id})
                     i += 1
 
-    return pd.DataFrame(statements), pd.DataFrame(qualifiers)
+    return pd.DataFrame(statements), pd.DataFrame(qualifiers), pd.DataFrame(paper_wikidata), pd.DataFrame(
+        annotations_wikidata)
 
 
 articles, scholarly_articles, annotation_entities = create_kgtk()
-statements, qualifiers = create_kgtk_format(articles, scholarly_articles, annotation_entities)
+statements, qualifiers, papers_w, annotations = create_kgtk_format(articles, scholarly_articles, annotation_entities)
 
 statements.to_csv('{}/covid_kgtk_statements.tsv'.format(os.getenv('covid_kg_path')), sep='\t', index=False)
 qualifiers.to_csv('{}/covid_kgtk_qualifiers.tsv'.format(os.getenv('covid_kg_path')), sep='\t', index=False)
+papers_w.to_csv('{}/papers_wikidata_kgtk.tsv'.format(os.getenv('covid_kg_path')), sep='\t', index=False, header=True,
+                columns=['id', 'node1', 'property', 'node2'])
+annotations.to_csv('{}/entities_wikidata_kgtk.tsv'.format(os.getenv('covid_kg_path')), sep='\t', index=False, header=True,
+                   columns=['id', 'node1', 'property', 'node2'])
+
+print('Done!')

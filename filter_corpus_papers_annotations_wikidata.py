@@ -11,7 +11,7 @@ nodes_file = "{}/{}".format(os.getenv('input_path'), os.getenv('node_file'))
 
 all_papers_path = "{}/papers_qnodes_in_corpus.txt".format(os.getenv('covid_kg_path'))
 
-o_dir = "{}/qnode_details".format(os.getenv('covid_kg_path'))
+o_dir = os.getenv('covid_kg_path')
 Path(o_dir).mkdir(parents=True, exist_ok=True)
 
 all_papers_f = open(all_papers_path)
@@ -27,16 +27,24 @@ qnodes_annotations = {}
 for k in annotations:
     qnodes_annotations[annotations[k]['qnode']] = 1
 
-paper_file = open('{}/papers_wikidata.tsv'.format(o_dir), 'w')
-paper_file.write('{}\t{}\t{}\t{}\n'.format('id', 'node1', 'property', 'node2'))
+paper_file_path = Path('{}/papers_wikidata_kgtk.tsv'.format(o_dir))
+if paper_file_path.is_file():
+    paper_file = open(paper_file_path, 'a')
+else:
+    paper_file = open(paper_file_path, 'w')
+    paper_file.write('{}\t{}\t{}\t{}\n'.format('id', 'node1', 'property', 'node2'))
 
-annotations_file = open('{}/annotations_wikidata.tsv'.format(o_dir), 'w')
-annotations_file.write('{}\t{}\t{}\t{}\n'.format('id', 'node1', 'property', 'node2'))
+annotations_file_path = Path('{}/entities_wikidata_kgtk.tsv'.format(o_dir))
+if annotations_file_path.is_file():
+    annotations_file = open(annotations_file_path, 'a')
+else:
+    annotations_file = open(annotations_file_path, 'w')
+    annotations_file.write('{}\t{}\t{}\t{}\n'.format('id', 'node1', 'property', 'node2'))
 
 f = gzip.open(edges_file)
 i = 0
 for line in f:
-    if i % 10000 == 0:
+    if i % 1000000 == 0:
         print(i)
     line = line.decode('utf-8')
     qnode = line.split('\t')[1]
@@ -51,7 +59,7 @@ f.close()
 f = gzip.open(nodes_file)
 i = 0
 for line in f:
-    if i % 10000 == 0:
+    if i % 1000000 == 0:
         print(i)
     line = line.decode('utf-8')
     vals = line.split('\t')

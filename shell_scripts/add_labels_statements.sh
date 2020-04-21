@@ -52,7 +52,12 @@ rm covid_kgtk_statements_sorted_by_node2_wlabel.tsv
 rm covid_kgtk_statements_sorted_by_property_temp.tsv
 rm covid_kgtk_statements_sorted_by_property.tsv
 rm covid_kgtk_statements_with_labels_order.tsv
+rm covid_kgtk_statements.tsv
 
 echo "compressing statements file..."
 time gzip -f covid_kgtk_statements_with_labels.tsv
+echo "Done!"
+
+echo "compressing qualifiers file..."
+time gzip -f covid_kgtk_qualifiers.tsv
 echo "Done!"
