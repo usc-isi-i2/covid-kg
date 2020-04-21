@@ -37,29 +37,14 @@ This repository assumes you have access to the shared google drive and have the 
 
 ## Run scripts to generate KGTK Wikidata Files
 
-Run the following scripts in order
+Run the following script,
 ```.bash
-cd shell_scripts
-./pre_process_wikidata_kgtk.sh
-
-cd ..
-python covid_analysis.py
-
-python create_covid_kg.py
-
-cd shell_scripts
-./add_labels_statements.sh
-
-cd ..
-python filter_corpus_papers_annotations_wikidata.py
-
-cd shell_scripts
-./compress.sh
+./run_for_covid_kg.sh
 ```
 
 The following output files will be generated,
 1. `<covid_kg_path>/covid_kgtk_statements_with_labels.tsv.gz`: KG Keng annotations file in the KGTK format. It includes
 the papers and entities which were not present in Wikidata.
 2. `<covid_kg_path>/covid_kgtk_qualifiers.tsv.gz`: qualifiers for the statements file
-3. `<covid_kg_path>/qnode_details/papers_wikidata.tsv.gz`: papers found in Wikidata and its properties in KGTK format
-4. `<covid_kg_path>/qnode_details/annotations_wikidata.tsv.gz`: entites found in Wikidata and its properties in KGTK format 
+3. `<covid_kg_path>/papers_wikidata_kgtk.tsv.gz`: papers found in Wikidata and its properties in KGTK format
+4. `<covid_kg_path>/entities_wikidata_kgtk.tsv.gz`: entites found in Wikidata and its properties in KGTK format 
