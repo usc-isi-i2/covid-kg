@@ -52,6 +52,9 @@ cd shell_scripts
 
 cd ..
 python filter_corpus_papers_annotations_wikidata.py
+
+cd shell_scripts
+./compress.sh
 ```
 
 The following output files will be generated,
