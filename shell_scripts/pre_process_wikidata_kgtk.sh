@@ -19,7 +19,7 @@ echo "Finished cutting labels from nodes file!\n"
 
 # sort labels file by qnodes
 echo "Sorting the labels..."
-cat $input_path/labels.tsv.gz ../covid/covid_kg_new_properties.tsv.gz >$input_path/labels_covid.tsv.gz
+cat $input_path/labels.tsv.gz ../covid_kg_new_properties.tsv.gz >$input_path/labels_covid.tsv.gz
 time gzcat $input_path/labels_covid.tsv.gz | tail -n +2 | LANG=C gsort -t $'\t' -S 5G --parallel=4 --key=1,1 | gzip >>$input_path/labels_sorted_temp.tsv.gz
 gzcat $input_path/labels_covid.tsv.gz | head -n 1 | gzip >$input_path/labels_header.tsv.gz
 cat $input_path/labels_header.tsv.gz $input_path/labels_sorted_temp.tsv.gz >$input_path/labels_sorted.tsv.gz
