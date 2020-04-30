@@ -105,9 +105,11 @@ def create_kgtk_format(articles: List[Article], scholarly_articles: List[Scholar
     qualifiers = list()
     paper_wikidata = list()
     annotations_wikidata = list()
+
     for article in articles:
         a_s = article.serialize()
         qnode = a_s['qnode']
+
         tfs = a_s['text_fragments']
         entities = a_s['entities']
         file_name = a_s['file_name']
@@ -130,11 +132,13 @@ def create_kgtk_format(articles: List[Article], scholarly_articles: List[Scholar
             t_node = tf['qnode']
             t_edge_id_prop = '{}-{}-{}-{}'.format(qnode, 'P2020001', file_name, i)
             t_label_edge_id = '{}-{}-{}-{}'.format(t_node, 'label', file_name, i)
+            t_p31_edge_id = '{}-{}-{}-{}'.format(t_node, 'P31', file_name, i)
             statements.append({'node1': qnode, 'property': 'P2020001', 'node2': t_node, 'id': t_edge_id_prop})
-            statements.append({'node1': t_node, 'property': 'label', 'node2': tf['label'], 'id': t_label_edge_id})
+            statements.append({'node1': t_node, 'property': 'P2020012', 'node2': tf['P2020012'], 'id': t_label_edge_id})
+            statements.append({'node1': t_node, 'property': 'P31', 'node2': tf['P31'], 'id': t_p31_edge_id})
             c = 0
             for k in tf:
-                if k not in ('qnode', 'label'):
+                if k not in ('qnode', 'P2020012', 'P31'):
                     qualifiers.append({'node1': t_edge_id_prop, 'property': k, 'node2': tf[k],
                                        'id': '{}-{}'.format(t_edge_id_prop, c)})
                     c += 1
@@ -189,7 +193,8 @@ statements.to_csv('{}/covid_kgtk_statements.tsv'.format(os.getenv('covid_kg_path
 qualifiers.to_csv('{}/covid_kgtk_qualifiers.tsv'.format(os.getenv('covid_kg_path')), sep='\t', index=False)
 papers_w.to_csv('{}/papers_wikidata_kgtk.tsv'.format(os.getenv('covid_kg_path')), sep='\t', index=False, header=True,
                 columns=['id', 'node1', 'property', 'node2'])
-annotations.to_csv('{}/entities_wikidata_kgtk.tsv'.format(os.getenv('covid_kg_path')), sep='\t', index=False, header=True,
+annotations.to_csv('{}/entities_wikidata_kgtk.tsv'.format(os.getenv('covid_kg_path')), sep='\t', index=False,
+                   header=True,
                    columns=['id', 'node1', 'property', 'node2'])
 
 print('Done!')

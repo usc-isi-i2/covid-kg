@@ -30,3 +30,7 @@ rm labels.tsv.gz
 
 echo "Finished sorting the labels!"
 
+q_file_no_ext=$(echo $qualifiers_file | cut -d'.' -f 1)
+echo "Truncating the input qualifiers file..."
+time gzcat $input_path/$qualifiers_file | mlr --tsvlite --otsv cut -x -f magnitude,unit,lower,upper,latitude,longitude,precision,calendar,entity-type | gzip >"$input_path/$q_file_no_ext"_truncated.tsv.gz
+echo "Finished truncating the qualifiers file!\n"

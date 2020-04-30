@@ -32,7 +32,7 @@ class Gene(object):
         self.P31 = 'Q7187'
 
     def create_qnode(self):
-        return 'Q00005550-gene-{}'.format(self.P351)
+        return 'Q00005550-gene-{}'.format(self.P351).replace(':', '')
 
     def serialize(self):
         _d = {'P31': self.P31}
@@ -90,7 +90,7 @@ class Chemical(object):
         self.qnode = self.create_qnode()
 
     def create_qnode(self):
-        return 'Q00005550-chemical-{}'.format(self.P486)
+        return 'Q00005550-chemical-{}'.format(self.P486).replace(':', '')
 
     def serialize(self):
         _d = {'P31': self.P31, 'qnode': self.qnode, 'P486': self.P486}
@@ -137,7 +137,7 @@ class Disease(object):
         self.qnode = self.create_qnode()
 
     def create_qnode(self):
-        return 'Q00005550-disease-{}'.format(self.P486)
+        return 'Q00005550-disease-{}'.format(self.P486).replace(':', '')
 
     def serialize(self):
         _d = {'P31': self.P31, 'qnode': self.qnode, 'P486': self.P486}
@@ -161,17 +161,19 @@ def create_disease_kg(disease_id):
 
 class TextFragment(object):
     def __init__(self, label, qnode, offset, section):
-        self.label = label
+        self.text = label
         self.qnode = qnode
         self.offset = offset
         self.section = section
+        self.P31 = 'Q1385610'
 
     def serialize(self):
         return {
-            'label': self.label,
+            'P2020012': self.text,
             'qnode': self.qnode,
             'P4153': self.offset,
             'P958': self.section,
+            'P31': self.P31
         }
 
 
@@ -255,6 +257,8 @@ class ScholarlyArticle(object):
             qnode = 'Q00007770{}'.format(self.P932)
         elif self.P698:
             qnode = 'Q00007770{}'.format(self.P698)
+        if ':' in qnode:
+            qnode = qnode.replace(':', '')
         return qnode
 
     def serialize(self):

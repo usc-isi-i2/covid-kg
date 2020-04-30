@@ -24,4 +24,11 @@ def validate_file(file_name, num_columns, sep='\t'):
 # validate_file('/Users/amandeep/Github/covid-kg/covid/covid_kgtk_qualifiers.tsv', 4)
 # validate_file('/Users/amandeep/Github/covid-kg/covid/qnode_details/papers_wikidata.tsv', 4)
 # validate_file('/Users/amandeep/Documents/covid_data/labels_sorted_temp.tsv.gz', 2)
-validate_file('/Users/amandeep/Github/covid-kg/covid/covid_kgtk_statements_with_labels.tsv.gz', 7)
+# validate_file('/Users/amandeep/Github/covid-kg/covid/covid_kgtk_statements_with_labels.tsv.gz', 7)
+# validate_file('/Users/amandeep/Github/covid-kg/covid/covid_kgtk_statements.tsv', 4)
+# validate_file('/Users/amandeep/Github/covid-kg/covid/covid_kgtk_qualifiers.tsv', 4)
+# validate_file('/Users/amandeep/Github/covid-kg/covid/papers_wikidata_kgtk.tsv', 4)
+# validate_file('/Users/amandeep/Github/covid-kg/covid/entities_wikidata_kgtk.tsv', 4)
+# validate_file('/Users/amandeep/Github/covid-kg/covid/all_properties.tsv', 4)
+validate_file('/Users/amandeep/Github/covid-kg/covid_kg_new_properties.tsv', 2)
+
